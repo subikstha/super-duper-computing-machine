@@ -54,4 +54,34 @@ const dispatch = useAppDispatch();
 const user = useAppSelector(
     state => state.user
 );
+
+                         Redux Store
+                             │
+       ┌─────────────────────┼─────────────────────┐
+       │                     │                     │
+      user                userCrops             locations
+       │                     │                     │
+  userSlice.reducer   userCropsSlice.reducer  countriesLocationSlice
+       │                     │                     │
+       └─────────────────────┼─────────────────────┘
+                             │
+                       configureStore()
+                             │
+                             ▼
+                          <Provider>
+                             │
+                    ┌────────┴────────┐
+                    │                 │
+               React Component   React Component
+                    │                 │
+              useSelector        useDispatch
+                    │                 │
+                    ▼                 ▼
+               Read state        Send action
+                                      │
+                                      ▼
+                                   Reducer
+                                      │
+                                      ▼
+                                  New state
 */

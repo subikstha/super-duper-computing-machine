@@ -11,3 +11,40 @@ export const useAppDispatch = () =>
 
 export const useAppSelector: TypedUseSelectorHook<RootState> =
   useSelector;
+
+///////////////////////////////////////////////////////////////////
+/* 
+The main reason for this file is TypeScript type safety around Redux hooks.
+
+Without this file, every component would have to manually tell TypeScript what your Redux store looks like.
+useSelector() and useDispatch() are react redux hooks
+useSelector reads data from the Redux store
+useDispatch sends action to the Redux store
+The problem is that plain Redux hooks donot automatically know the types of the particular store
+export type RootState = ReturnType<typeof store.getState>; this gives the type of the root state
+export type AppDispatch = typeof store.dispatch; and this tells TS the kind of actions your particular store can dispatch
+
+The problem with plain useSelector is with just
+const tasks = useSelector(state => state.tasks.items), TS does not know the type of state
+Without typing the hook, TS does not necessarily know that state.tasks exists
+
+Manually doing 
+const tasks = useSelector((state: RootState) => state.tasks.items) will help TS understand the types
+but if there are many components we have to write this everywhere and can be repititive
+
+TypedUseSelectorHook solves that
+export const useAppSelector: TypedUseSelectorHook<RootState> =
+  useSelector; this creates your own typed version of useSelector
+
+with this instead of 
+useSelector(
+  (state: RootState) => state.tasks.items
+);
+
+we can now write
+useAppSelector(
+  state => state.tasks.items
+);
+
+and then TS automatically knows state: RootState, so we can get the necessary autocompletes
+*/
