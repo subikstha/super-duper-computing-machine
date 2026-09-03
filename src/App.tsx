@@ -1,14 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
-import { Button } from 'antd'
-import { DatePicker } from 'antd'
 import UserForm from './components/forms/UserForm'
+import { useAppDispatch } from './app/hooks'
+import { getUsers } from './features/user/userSlice'
+import TaskForm from './components/forms/TaskForm'
 
 function App() {
   const [count, setCount] = useState(0)
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(getUsers())
+  }, [])
 
   return (
     <>
@@ -19,10 +25,8 @@ function App() {
           <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
         <div>
-          <h1>Get started</h1>
-          <Button size='large'>Ant design</Button>
-          <h2>Ant Design Datepicker</h2>
           <UserForm />
+          <TaskForm />
           <p>
             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
           </p>

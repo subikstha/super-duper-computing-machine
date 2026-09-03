@@ -27,6 +27,17 @@ const initialState: Users = {
     error: null
 }
 
+export const getUsers = createAsyncThunk("users/getUsers", async () => {
+    const response = await fetch(`${apiURL}/users`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    })
+
+    return response.json();
+})
+
 export const postUsers = createAsyncThunk(
     "users/createUsers", // Action type prefix 
     async (user: CreateUserPayload) => {
@@ -71,6 +82,9 @@ export const userSlice = createSlice({
         }).addCase(postUsers.rejected, (state, action) => {
             state.loading = false;
             state.error = action.error.message ?? "Failed to create user"
+        }).addCase(getUsers.fulfilled, (state, action) => {
+            if (state.items.length == 0)
+                state.items.push(action.payload)
         })
     }
 })
