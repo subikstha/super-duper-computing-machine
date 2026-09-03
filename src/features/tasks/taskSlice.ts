@@ -11,15 +11,19 @@ type Task = {
 
 type TasksState = {
     tasks: Task[]
+    loading: boolean;
+    error: string | null;
 }
 
-type CreateTaskPayload = {
+export type CreateTaskPayload = {
     title: string;
     assigneeId: string;
 }
 
 const initialState: TasksState = {
-    tasks: []
+    tasks: [],
+    loading: false,
+    error: null
 }
 
 // Taskslice creates a redux slice to tell redux we want a section of my global state responsible for tasks.

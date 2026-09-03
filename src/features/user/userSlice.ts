@@ -84,7 +84,7 @@ export const userSlice = createSlice({
             state.error = action.error.message ?? "Failed to create user"
         }).addCase(getUsers.fulfilled, (state, action) => {
             if (state.items.length == 0)
-                state.items.push(action.payload)
+                state.items.push(...action.payload)
         })
     }
 })
