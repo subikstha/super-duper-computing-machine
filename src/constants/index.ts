@@ -14,3 +14,5 @@ export const users = [
         name: ''
     }
 ]
+
+export const apiURL = "http://localhost:3000"

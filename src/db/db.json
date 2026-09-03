@@ -1,0 +1,26 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Subik Shrestha",
+      "role": "Frontend Developer"
+    },
+    {
+      "name": "Subik Shrestha",
+      "role": "Frontend Developer",
+      "id": "5AU_XHKQmSM"
+    },
+    {
+      "name": "Subik Shrestha",
+      "role": "Frontend Developer",
+      "id": "hKo_c65j8cM"
+    },
+    {
+      "name": "Subik Shrestha",
+      "role": "Frontend Developer",
+      "id": "_7OSxE5vz1A"
+    }
+  ],
+  "tasks": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}

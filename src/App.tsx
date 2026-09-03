@@ -4,6 +4,8 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
 import { Button } from 'antd'
+import { DatePicker } from 'antd'
+import UserForm from './components/forms/UserForm'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -19,6 +21,8 @@ function App() {
         <div>
           <h1>Get started</h1>
           <Button size='large'>Ant design</Button>
+          <h2>Ant Design Datepicker</h2>
+          <UserForm />
           <p>
             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
           </p>
