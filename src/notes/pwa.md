@@ -434,3 +434,412 @@ app/
     and make sure the relevant generated resources are available/cached.
 
 UI can say if you are offline some features may be unavailable
+
+# Offline CRUD architecture
+
+Suppose you have a task manager
+
+Online 
+User
+ ↓
+React
+ ↓
+API
+ ↓
+Server
+ ↓
+PostgreSQL
+
+Offline
+User
+ ↓
+React
+ ↓
+IndexedDB
+
+Then when connectivity returns
+IndexedDB
+    │
+    │ pending operations
+    ▼
+Sync engine
+    │
+    ▼
+API
+    │
+    ▼
+PostgreSQL
+
+This is called an offline-first architecture
+A PWA does not automatically give this but you have to design it
+
+# Where IndexedDB enters
+
+If tasks are stoed in IndexedDB, we might have
+tasks
+-------------------------
+id
+title
+completed
+updatedAt
+
+and another store might have
+syncQueue
+-------------------------
+id
+operation
+entity
+payload
+createdAt
+
+When offline
+Create task
+     ↓
+Save task to IndexedDB
+     ↓
+Save operation to syncQueue
+
+then the UI can immediately show
+Task created even though the server has not received it yet
+
+# Synchronization
+
+When connectivity returns
+             Internet unavailable
+                     │
+                     ▼
+              IndexedDB
+              ┌────────────┐
+              │ tasks      │
+              │ syncQueue  │
+              └────────────┘
+                     │
+                     │ online
+                     ▼
+                Sync engine
+                     │
+                     ▼
+                   API
+                     │
+                     ▼
+                PostgreSQL
+
+Then after successful sync, remove from syncQueue
+
+This is where PWA development becomes much more interesting than simply installing a service worker.
+
+# What about Next.js server components?
+
+The service worker belongs to the browser, so things like
+navigator.serviceWorker
+indexedDB
+window etc all are client-side concepts
+
+# Next.js does not itself become offline
+
+This is another mental model
+Suppose your server component does this
+```TS
+export default async function Page() {
+  const data = await fetch("https://api.example.com/data");
+
+  return ...
+}
+```
+
+If that rendering needs the server and the user is offline, the browser cannot magically execute the server
+A PWA instead relies on already available client-side resources/data and service-worker behavior.
+So we have to decide the following
+
+What can run offline?
+What data is available offline?
+What should happen when data isn't available?
+
+# PWA + Next.js rendering
+
+Next.js might have
+Server rendering
+      ↓
+HTML
+      ↓
+Browser
+      ↓
+Hydration
+
+Your PWA layer sits primarily on the browser side
+
+Browser
+│
+├── React
+│
+├── Service Worker
+│
+├── Cache API
+│
+└── IndexedDB
+
+This is why PWA development requires understanding both Next.js architecture and browser architecture
+
+# A practical Next.js PWA architecture
+
+                     Next.js
+                        │
+             ┌──────────┴──────────┐
+             │                     │
+           Server               Browser
+             │                     │
+       API / Database         React application
+                                   │
+                    ┌──────────────┼──────────────┐
+                    │              │              │
+              Service Worker   IndexedDB      TanStack Query
+                    │              │              │
+               Cache API      Local data       Server cache
+                    │              │              │
+                    └──────────────┼──────────────┘
+                                   │
+                                Network
+                                   │
+                                   ▼
+                              Next.js API
+
+# You donot have to write the service worker manually
+
+In fact, for a production Next.js application, you will often use a library/tooling approach rather than hand-writing every caching rule.
+
+One common ecosystem option is next-pwa/Workbox-based tooling, although the exact package you choose should depend on your Next.js version and App Router setup.
+
+The important thing is to understand what the generated service worker is doing.
+
+Don't start with:
+npm install some-pwa-package and copy a configuration
+
+It is better to understand
+Service Worker
+Cache API
+Manifest
+Caching strategies
+Offline behavior
+
+and then tooling makes much more sense
+
+# Workbox
+
+You will probably encounter Workbox when studying PWAs.
+Workbox is a collection of libraries/tools for service workers.
+Instead of manually implementing:
+```TS
+caches.open(...)
+caches.match(...)
+fetch(...)
+```
+
+we can use abstractions for common strategies, conceptually
+Your Next.js app
+       ↓
+PWA tooling
+       ↓
+Workbox
+       ↓
+Generated service worker
+       ↓
+Browser
+
+This is one reason the service-worker ecosystem can feel more complicated than expected.
+
+# Push notifications
+
+This is another feature often associated with PWAs.
+The architecture looks roughly like:
+
+Your server
+     │
+     │ push message
+     ▼
+Push service
+     │
+     ▼
+Browser
+     │
+     ▼
+Service Worker
+     │
+     ▼
+Notification
+
+The service worker can receive push events even when your webpage isn't currently open in the normal way. For example
+
+Server
+  │
+  │ "New assignment available"
+  ▼
+Push service
+  │
+  ▼
+Browser
+  │
+  ▼
+Service Worker
+  │
+  ▼
+Notification
+
+This is different from:
+
+React -> toast notification
+
+Because the latter generally requires your page/application to be running
+
+# Background Synchronization
+
+Another advanced capability is Background Sync
+Imagine:
+User
+ ↓
+Create task
+ ↓
+Offline
+
+Instead of losing the operation:
+IndexedDB
+ ↓
+pending operation
+
+When connectivity becomes available:
+Browser
+ ↓
+Service Worker
+ ↓
+sync
+ ↓
+API
+
+Again, browser support and platform behavior vary, so you should treat advanced background features as progressive enhancements rather than assumptions.
+
+# HTTPS
+PWAs generally require a secure context. so when deploying PWA,
+Next.js
+   ↓
+HTTPS
+   ↓
+Browser
+   ↓
+Service Worker
+
+# Installation
+Once your application has the appropriate manifest and meets the browser/platform's installability requirements, the browser can offer installation.
+The user might see something like:
+Install My App
+
+After installation:
+Operating System
+       │
+       ▼
+My App
+       │
+       ▼
+PWA
+       │
+       ├── React
+       ├── Service Worker
+       ├── Cache
+       └── IndexedDB
+
+But installation behavior differs across browsers and OS
+
+# What happens when the user opens the installed PWA?
+
+Imagine
+User clicks PWA icon
+        ↓
+Browser launches app
+        ↓
+start_url
+        ↓
+Service Worker
+        ↓
+Cache / Network
+        ↓
+Next.js application
+
+If you are offline
+
+Network -> fresh data
+
+If offline
+
+Cache / IndexedDB → available data
+
+# Updating a PWA
+
+This is one of the trickiest parts
+Imagine you deploy
+PWA v1
+
+and the user's service worker has cached:
+app.js v1
+
+Then you deploy:
+PWA v2
+
+Then the browser does not necessarily throw away the old service worker immediately, the lifecycle might be
+Old SW
+   ↓
+New SW downloaded
+   ↓
+New SW installed
+   ↓
+Waiting
+   ↓
+Old SW still controlling page
+   ↓
+New SW activated
+
+This is why service-workder updates can sometimes surprise developers
+
+# Cache Versioning
+
+You commonly version your caches
+```TS
+const CACHE_NAME = "my-app-v2";
+```
+
+when you release a new version:
+my-app-v1 becomes my-app-v2, 
+during activation, you can remove old caches
+
+Conceptually
+Cache
+├── my-app-v1
+├── my-app-v2
+└── ...
+
+Then 
+
+activate -> delete old caches
+
+This prevents users from being stuck with obsolete assets
+
+# A very important PWA problem: stale data
+
+If the application caches /api/products and the user opens the app tomorrow, the cache might say
+Product price = $100
+but the server says
+Product price = $120
+
+The PWA needs a policy
+For example cache first might prioritize speed whereas
+Network first prioritizes freshness
+So PWA development is fundamentally about making these tradeoffs intentionally.
+
+# A useful way to think about caching
+
+For every resource, ask these questions
+Does it need to work offline? - Yes/no
+How fresh must it be? - seconds, minutes, hours, days etc
+Can stale data be shown ? - Yes/no
+Is it public or user-specific? - public/private
+Is it read-only or mutable? - Get / POST/PUT/DELETE
+
+Answers to these questions determine your caching/sync strategy
+
