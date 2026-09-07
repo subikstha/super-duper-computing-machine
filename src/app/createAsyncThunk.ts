@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////
 /*
 createAsyncThunk solves the problem where we might need to represent different states
-like loading and potentially error when doing asynchronous operations like fetchin data
+like loading and potentially error when doing asynchronous operations like fetching data
 
 Since a request is not instantaneous but like Component
    ↓
@@ -73,7 +73,7 @@ Now when this async thunk below is created
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const fetchTasks = createAsyncThunk(
-  "tasks/fetchTasks",
+  "tasks/fetchTasks",   
   async () => {
     const response = await fetch(
       "https://example.com/api/tasks"
